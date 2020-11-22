@@ -41,16 +41,7 @@ websites = {
     'nytimes.com': nytimes_com,
     'bloomberg.com': bloomberg_com
 }
-'''
-url = input()
-for web in websites:
-    if url == 'nytimes.com':
-        print(websites[0])
-        url = input()
-    if url == 'bloomberg.com':
-        print(websites[1])
-        url = input()
-'''
+visited_webs = []
 
 
 def main():
@@ -60,11 +51,15 @@ def main():
             input_url = input()
             if input_url == 'exit':
                 repeat_input = False
+            elif input_url == 'back':
+                visited_url = show_visited()
+                print(websites.get(visited_url))
             else:
                 if check_dot(input_url) and check_url(input_url):
                     print(websites.get(input_url))
                     create_folder(argv[1])
                     create_file(input_url)
+                    visited_webs.append(input_url)
     else:
         print('Error')
 
@@ -95,6 +90,13 @@ def create_file(url):
     web_name = url.rsplit('.')
     with open(f'./{argv[1]}/{web_name[0]}', 'w') as web:
         web.write(f'{websites.get(url)}')
+
+
+def show_visited():
+    current_web = len(visited_webs) - 1
+    before_current = current_web - 1
+    if len(visited_webs) > 1:
+        return visited_webs[before_current]
 
 
 main()

@@ -17,4 +17,3 @@ if error != 0:
     print('ERROR')
 else:
     print('OK')
-
