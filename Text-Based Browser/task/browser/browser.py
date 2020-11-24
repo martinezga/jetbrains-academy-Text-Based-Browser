@@ -1,6 +1,8 @@
 from sys import argv
 from os import path, mkdir
 import requests
+from bs4 import BeautifulSoup
+
 
 visited_webs = []
 
@@ -14,11 +16,13 @@ def main():
                 repeat_input = False
             elif input_url == 'back':
                 visited_url = show_visited()
-                print(get_content(visited_url))
+                for line in get_content(visited_url):
+                    print(line)
             else:
                 if check_dot(input_url) and verify_response(input_url):
                     web_content = get_content(input_url)
-                    print(web_content)
+                    for line in web_content:
+                        print(line)
                     create_folder(argv[1])
                     create_file(input_url, web_content)
                     visited_webs.append(input_url)
@@ -57,7 +61,13 @@ def verify_response(url):
 def get_content(url):
     new_url = check_url(url)
     req = requests.get(new_url)
-    return req.text
+    soup = BeautifulSoup(req.content, 'html.parser')
+    tag_list = soup.find_all(['h1', 'h2', 'h3', 'h4', 'h5', 'p', 'a', 'ul', 'ol', 'li'])
+    cleaned_list = []
+    for line in tag_list:
+        if line.text != '' and line.text != '\n':
+            cleaned_list.append(line.text)
+    return cleaned_list
 
 
 def create_folder(dir_name):
@@ -67,9 +77,14 @@ def create_folder(dir_name):
 
 
 def create_file(url, content):
-    web_name = url.rsplit('.')
-    with open(f'./{argv[1]}/{web_name[0]}', 'w') as web:
-        web.write(f'{content}')
+    if (url.rfind('http://') and url.rfind('https://')) == 0:
+        pre_name = url.rsplit('//')
+    else:
+        pre_name = ['', url]
+    web_name = pre_name[1].rsplit('.')
+    with open(f'./{argv[1]}/{web_name[0]}.txt', 'w', encoding='utf-8') as web:
+        for line in content:
+            web.write(line + '\n')
 
 
 def show_visited():
