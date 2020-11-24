@@ -2,6 +2,7 @@ from sys import argv
 from os import path, mkdir
 import requests
 from bs4 import BeautifulSoup
+from colorama import Fore
 
 
 visited_webs = []
@@ -15,14 +16,13 @@ def main():
             if input_url == 'exit':
                 repeat_input = False
             elif input_url == 'back':
-                visited_url = show_visited()
-                for line in get_content(visited_url):
-                    print(line)
+                visited_url = get_visited()
+                visited_content = get_content(visited_url)
+                colored_content(visited_content)
             else:
                 if check_dot(input_url) and verify_response(input_url):
                     web_content = get_content(input_url)
-                    for line in web_content:
-                        print(line)
+                    colored_content(web_content)
                     create_folder(argv[1])
                     create_file(input_url, web_content)
                     visited_webs.append(input_url)
@@ -66,7 +66,7 @@ def get_content(url):
     cleaned_list = []
     for line in tag_list:
         if line.text != '' and line.text != '\n':
-            cleaned_list.append(line.text)
+            cleaned_list.append([line.name, line.text])
     return cleaned_list
 
 
@@ -76,18 +76,32 @@ def create_folder(dir_name):
         # print('created', dir_name)
 
 
+def colored_content(content):
+    for line in content:
+        if line[0] == 'a':
+            print(Fore.BLUE + line[1])
+        else:
+            print(Fore.WHITE + line[1])
+
+
 def create_file(url, content):
-    if (url.rfind('http://') and url.rfind('https://')) == 0:
+    print(url)
+    if (url.rfind('http://www') and url.rfind('https://www')) == 0:
+        pre_name = url.rsplit('www.')
+    elif (url.rfind('http://') and url.rfind('https://')) == 0:
         pre_name = url.rsplit('//')
+    elif url.rfind('www') == 0:
+        pre_name = url.rsplit('www.')
     else:
         pre_name = ['', url]
+    print(pre_name)
     web_name = pre_name[1].rsplit('.')
     with open(f'./{argv[1]}/{web_name[0]}.txt', 'w', encoding='utf-8') as web:
         for line in content:
-            web.write(line + '\n')
+            web.write(line[1] + '\n')
 
 
-def show_visited():
+def get_visited():
     current_web = len(visited_webs) - 1
     before_current = current_web - 1
     if len(visited_webs) > 1:
