@@ -1,46 +1,7 @@
 from sys import argv
 from os import path, mkdir
+import requests
 
-nytimes_com = '''
-This New Liquid Is Magnetic, and Mesmerizing
-
-Scientists have created “soft” magnets that can flow 
-and change shape, and that could be a boon to medicine 
-and robotics. (Source: New York Times)
-
-
-Most Wikipedia Profiles Are of Men. This Scientist Is Changing That.
-
-Jessica Wade has added nearly 700 Wikipedia biographies for
- important female and minority scientists in less than two 
- years.
-
-'''
-
-bloomberg_com = '''
-The Space Race: From Apollo 11 to Elon Musk
-
-It's 50 years since the world was gripped by historic images
- of Apollo 11, and Neil Armstrong -- the first man to walk 
- on the moon. It was the height of the Cold War, and the charts
- were filled with David Bowie's Space Oddity, and Creedence's 
- Bad Moon Rising. The world is a very different place than 
- it was 5 decades ago. But how has the space race changed since
- the summer of '69? (Source: Bloomberg)
-
-
-Twitter CEO Jack Dorsey Gives Talk at Apple Headquarters
-
-Twitter and Square Chief Executive Officer Jack Dorsey 
- addressed Apple Inc. employees at the iPhone maker’s headquarters
- Tuesday, a signal of the strong ties between the Silicon Valley giants.
-'''
-
-# write your code here
-websites = {
-    'nytimes.com': nytimes_com,
-    'bloomberg.com': bloomberg_com
-}
 visited_webs = []
 
 
@@ -53,12 +14,13 @@ def main():
                 repeat_input = False
             elif input_url == 'back':
                 visited_url = show_visited()
-                print(websites.get(visited_url))
+                print(get_content(visited_url))
             else:
-                if check_dot(input_url) and check_url(input_url):
-                    print(websites.get(input_url))
+                if check_dot(input_url) and verify_response(input_url):
+                    web_content = get_content(input_url)
+                    print(web_content)
                     create_folder(argv[1])
-                    create_file(input_url)
+                    create_file(input_url, web_content)
                     visited_webs.append(input_url)
     else:
         print('Error')
@@ -73,11 +35,29 @@ def check_dot(url):
 
 
 def check_url(url):
-    if url in websites:
-        return 1
+    if (url.rfind('http://') and url.rfind('https://')) == -1:
+        return 'https://' + url
     else:
+        return url
+
+
+def verify_response(url):
+    new_url = check_url(url)
+    try:
+        req = requests.get(new_url)
+        if 200 <= req.status_code < 400:
+            return 1
+        else:
+            print('error')
+            return 0
+    except:
         print('error')
-        return 0
+
+
+def get_content(url):
+    new_url = check_url(url)
+    req = requests.get(new_url)
+    return req.text
 
 
 def create_folder(dir_name):
@@ -86,10 +66,10 @@ def create_folder(dir_name):
         # print('created', dir_name)
 
 
-def create_file(url):
+def create_file(url, content):
     web_name = url.rsplit('.')
     with open(f'./{argv[1]}/{web_name[0]}', 'w') as web:
-        web.write(f'{websites.get(url)}')
+        web.write(f'{content}')
 
 
 def show_visited():
